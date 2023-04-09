@@ -1,8 +1,11 @@
 import numpy as np
 from flask import Flask, request, jsonify, render_template,json
 import cv2
+import requests
 from skimage.metrics import structural_similarity as ssim
 import pandas as pd
+import urllib.request
+
 
 app = Flask(__name__)
 
@@ -40,12 +43,18 @@ def predict():
 
 @app.route('/img2',methods=['POST'])
 def predictface():
-    file1 = request.files['file1']
-    file2 = request.files['file2']
+    data=request.json
+    url1=data['url1']
+     # get URL of first image from form data
+    url2 = "https://firebasestorage.googleapis.com/v0/b/employee-auth-2a99e.appspot.com/o/chac2.jpg?alt=media&token=f7792caf-aebf-4109-8af8-40604e4e6a55"
 
-    # Read the images using OpenCV
-    img1 = cv2.imdecode(np.frombuffer(file1.read(), np.uint8), cv2.IMREAD_COLOR)
-    img2 = cv2.imdecode(np.frombuffer(file2.read(), np.uint8), cv2.IMREAD_COLOR)
+    # Read the first image from URL using requests library
+    img1 = cv2.imdecode(np.frombuffer(requests.get(url1).content, np.uint8), cv2.IMREAD_COLOR)
+
+    # Download the second image from the URL
+    with urllib.request.urlopen(url2) as url:
+        s = url.read()
+    img2 = cv2.imdecode(np.frombuffer(s, np.uint8), cv2.IMREAD_COLOR)
 
     # Convert the images to grayscale
     gray_img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
@@ -72,12 +81,13 @@ def predictface():
 
         # Convert the similarity score to a percentage
         similarity_percentage = score * 100
+        print("hello")
 
         # Return the similarity percentage in a JSON response
         return jsonify({'similarity_percentage': similarity_percentage})
 
     else:
-        return jsonify({'message': 'Could not detect faces in both images.'})
+        return jsonify({'similarity_percentage': 'Could not detect faces in both images.'})
 
 if __name__ == '__main__':
     app.run(debug=True)
