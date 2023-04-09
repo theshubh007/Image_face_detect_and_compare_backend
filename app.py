@@ -41,7 +41,7 @@ def predict():
     # Return the similarity percentage in a JSON response
     return jsonify({'similarity_percentage': similarity_percentage})    
 
-@app.route('/img2',methods=['POST'])
+@app.route('/img3',methods=['POST'])
 def predictface():
     data=request.json
     url1=data['url1']
